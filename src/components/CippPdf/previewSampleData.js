@@ -79,6 +79,18 @@ export const SAMPLE_EXECUTIVE = {
       isEncrypted: true,
       lastSyncDateTime: '2026-08-04T21:30:00Z',
     },
+    // A Windows 365 Cloud PC: isEncrypted is false (no BitLocker) but the disk is
+    // platform-encrypted by Azure, so the report counts it as encrypted.
+    {
+      deviceName: 'CPC-SAMPLE-005',
+      operatingSystem: 'Windows',
+      complianceState: 'compliant',
+      isEncrypted: false,
+      deviceType: 'cloudPC',
+      model: 'Cloud PC Enterprise 2vCPU/8GB/128GB',
+      manufacturer: 'Microsoft Corporation',
+      lastSyncDateTime: '2026-08-05T08:20:00Z',
+    },
   ],
   // Also a plain array — `conditionalAccessData?.data?.Results` in the real report.
   conditionalAccessData: [
@@ -350,22 +362,204 @@ export const SAMPLE_SHADOW_AI = {
   ],
 }
 
-/** BEC remediation report. */
+/** BEC remediation report. Field shapes mirror the real Push-BECRun payload so the preview
+ * renders every report section with plausible values rather than 'Unknown' placeholders. */
 export const SAMPLE_BEC = {
   userData: { displayName: 'Sample User', userPrincipalName: 'sample.user@example.com' },
   becData: {
     ExtractedAt: '2026-08-05T09:00:00Z',
-    ExtractResult: 'Completed',
-    NewRules: [{ Name: 'Sample forwarding rule', MoveToFolder: 'RSS Feeds' }],
-    InboxRuleChanges: [{ Name: 'Sample rule change' }],
-    NewUsers: [],
-    AddedApps: [{ DisplayName: 'Sample OAuth app' }],
-    MailboxPermissionChanges: [{ Grantee: 'sample.other@example.com' }],
-    MFADevices: [{ Device: 'Sample phone' }],
-    ChangedPasswords: [{ User: 'sample.user@example.com' }],
-    TrustedSenders: [],
-    BlockedSenders: [],
-    SafelistChanges: [],
+    ExtractResult: 'Successfully extracted logs from auditlog',
+    AnalysisWindowDays: 7,
+    NewRules: [
+      {
+        Name: 'Sample forwarding rule',
+        Description: 'Move messages from billing@example.com to folder RSS Feeds',
+        MoveToFolder: 'RSS Feeds',
+        RecentlyChanged: true,
+      },
+    ],
+    InboxRuleChanges: [
+      {
+        Operation: 'New-InboxRule',
+        UserKey: 'sample.user@example.com',
+        RuleName: 'Sample forwarding rule',
+        Parameters: 'MoveToFolder=RSS Feeds; MarkAsRead=True',
+        Date: '2026-08-03T11:24:00Z',
+        ClientIP: '203.0.113.10',
+        Country: 'NG',
+        City: 'Lagos',
+        ForeignLocation: true,
+      },
+    ],
+    NewUsers: [
+      {
+        displayName: 'Sample Contractor',
+        userPrincipalName: 'sample.contractor@example.com',
+        createdDateTime: '2026-08-02T08:00:00Z',
+      },
+    ],
+    AddedApps: [
+      {
+        displayName: 'Sample OAuth app',
+        appId: '00000000-0000-0000-0000-000000000001',
+        publisher: 'Sample Publisher',
+        createdDateTime: '2026-08-01T10:00:00Z',
+        MaliciousMatch: null,
+      },
+    ],
+    MaliciousSPs: [
+      {
+        displayName: 'Sample Mail Sync Tool',
+        appId: '00000000-0000-0000-0000-000000000002',
+        accountEnabled: true,
+        createdDateTime: '2026-07-30T09:30:00Z',
+        CatalogName: 'Sample Mail Sync Tool',
+        Categories: ['Mailbox exfiltration', 'Business Email Compromise'],
+        Description: 'Sample catalog entry used for preview data.',
+      },
+    ],
+    MailboxPermissionChanges: [
+      {
+        Operation: 'Add-MailboxPermission',
+        UserKey: 'admin@example.com',
+        ObjectId: 'sample.user@example.com',
+        Permissions: 'FullAccess',
+        TargetsSuspect: true,
+      },
+    ],
+    SentMessages: [
+      {
+        MessageTraceId: '00000000-0000-0000-0000-000000000003',
+        Status: 'Delivered',
+        Subject: 'Sample invoice',
+        RecipientAddress: 'supplier@example.net',
+        Received: '2026-08-04 15:02:11Z',
+        FromIP: '203.0.113.10',
+        Country: 'NG',
+        City: 'Lagos',
+        ForeignLocation: true,
+      },
+    ],
+    SentMessageAnalysis: {
+      TotalMessages: 47,
+      TotalRecipients: 212,
+      RepeatedSubjects: [
+        {
+          Subject: 'Sample invoice',
+          MessageCount: 38,
+          RecipientCount: 190,
+          FirstSent: '2026-08-04 14:55:00Z',
+          LastSent: '2026-08-04 15:20:00Z',
+          Flagged: true,
+        },
+      ],
+      FlaggedSubjectCount: 1,
+      Bursts: [
+        {
+          WindowStart: '2026-08-04 15:00:00Z',
+          WindowMinutes: 10,
+          MessageCount: 31,
+          RecipientCount: 160,
+          TopSubject: 'Sample invoice',
+        },
+      ],
+      Flagged: true,
+    },
+    MFADevices: [
+      {
+        '@odata.type': '#microsoft.graph.microsoftAuthenticatorAuthenticationMethod',
+        displayName: 'Sample phone',
+        createdDateTime: '2026-08-03T12:00:00Z',
+      },
+    ],
+    ChangedPasswords: [
+      {
+        displayName: 'Sample User',
+        userPrincipalName: 'sample.user@example.com',
+        lastPasswordChangeDateTime: '2026-08-03T12:05:00Z',
+      },
+    ],
+    TrustedSenders: ['trusted@example.net', 'example-partner.com'],
+    BlockedSenders: ['security-alerts@example.org'],
+    SafelistChanges: [
+      {
+        Operation: 'Set-MailboxJunkEmailConfiguration',
+        UserKey: 'sample.user@example.com',
+        Date: '2026-08-03T11:30:00Z',
+        ClientIP: '203.0.113.10',
+        Country: 'NG',
+        City: 'Lagos',
+        ForeignLocation: true,
+        Trusted: ['attacker-domain.example'],
+        Blocked: null,
+      },
+    ],
+    SharingChanges: [
+      {
+        Operation: 'AnonymousLinkCreated',
+        UserKey: 'sample.user@example.com',
+        Date: '2026-08-04T10:15:00Z',
+        Workload: 'OneDrive',
+        FileName: 'Payroll Q3.xlsx',
+        ItemUrl: 'https://example-my.sharepoint.com/personal/sample_user/Documents/Payroll Q3.xlsx',
+        Target: null,
+        TargetType: null,
+        ClientIP: '203.0.113.10',
+        Country: 'NG',
+        City: 'Lagos',
+        ForeignLocation: true,
+      },
+    ],
+    IntuneDevices: [
+      {
+        id: '00000000-0000-0000-0000-000000000004',
+        deviceName: 'SAMPLE-VM01',
+        operatingSystem: 'Windows',
+        osVersion: '10.0.26100',
+        complianceState: 'noncompliant',
+        enrolledDateTime: '2026-08-03T13:00:00Z',
+        lastSyncDateTime: '2026-08-05T08:00:00Z',
+        deviceEnrollmentType: 'windowsAzureADJoin',
+        serialNumber: 'SAMPLE1234',
+      },
+    ],
+    SuspectUserSignIns: [
+      {
+        CreatedDateTime: '2026-08-04T22:14:00Z',
+        AppDisplayName: 'Office 365 Exchange Online',
+        ClientAppUsed: 'Browser',
+        Status: 'Success',
+        IPAddress: '203.0.113.10',
+        Country: 'NG',
+        City: 'Lagos',
+        ForeignLocation: true,
+      },
+      {
+        CreatedDateTime: '2026-08-04T09:02:00Z',
+        AppDisplayName: 'Microsoft Teams',
+        ClientAppUsed: 'Mobile Apps and Desktop clients',
+        Status: 'Success',
+        IPAddress: '198.51.100.24',
+        Country: 'US',
+        City: 'Seattle',
+        ForeignLocation: false,
+      },
+    ],
+    LocationAnalysis: {
+      UsageLocation: 'US',
+      UserRegisteredCountry: 'United States',
+      SignInCountries: [
+        { Country: 'US', Count: 41 },
+        { Country: 'NG', Count: 9 },
+      ],
+      ForeignSignInCount: 9,
+      ForeignSuccessfulSignInCount: 8,
+      ForeignRuleChangeCount: 1,
+      ForeignSafelistChangeCount: 1,
+      ForeignSharingChangeCount: 1,
+      ForeignSentMessageCount: 1,
+      Note: null,
+    },
   },
 }
 
@@ -442,6 +636,57 @@ export const SAMPLE_PERMISSIONS = {
 }
 
 /**
+ * Exchange mail flow report. Fourteen days of daily disposition counts, shaped as the page hands
+ * them over: totals per event type, direction totals, and the per-day rows behind them.
+ */
+export const SAMPLE_MAIL_FLOW = {
+  days: 14,
+  totals: {
+    GoodMail: 48210,
+    TransportRules: 1340,
+    SpamDetections: 6120,
+    EdgeBlockSpam: 3980,
+    EmailPhish: 412,
+    EmailMalware: 37,
+  },
+  directionTotals: {
+    Inbound: 39280,
+    Outbound: 8940,
+    IntraOrg: 11879,
+  },
+  daily: [
+    { date: '2026-08-04', GoodMail: 3410, TransportRules: 96, SpamDetections: 430, EdgeBlockSpam: 281, EmailPhish: 29, EmailMalware: 3 },
+    { date: '2026-08-05', GoodMail: 3688, TransportRules: 104, SpamDetections: 468, EdgeBlockSpam: 302, EmailPhish: 33, EmailMalware: 2 },
+    { date: '2026-08-06', GoodMail: 3572, TransportRules: 88, SpamDetections: 451, EdgeBlockSpam: 295, EmailPhish: 31, EmailMalware: 4 },
+    { date: '2026-08-07', GoodMail: 3740, TransportRules: 112, SpamDetections: 502, EdgeBlockSpam: 318, EmailPhish: 38, EmailMalware: 1 },
+    { date: '2026-08-08', GoodMail: 3495, TransportRules: 97, SpamDetections: 476, EdgeBlockSpam: 304, EmailPhish: 35, EmailMalware: 3 },
+    { date: '2026-08-09', GoodMail: 1180, TransportRules: 21, SpamDetections: 268, EdgeBlockSpam: 174, EmailPhish: 12, EmailMalware: 0 },
+    { date: '2026-08-10', GoodMail: 1042, TransportRules: 18, SpamDetections: 251, EdgeBlockSpam: 166, EmailPhish: 10, EmailMalware: 1 },
+    { date: '2026-08-11', GoodMail: 3820, TransportRules: 118, SpamDetections: 529, EdgeBlockSpam: 341, EmailPhish: 41, EmailMalware: 5 },
+    { date: '2026-08-12', GoodMail: 3903, TransportRules: 121, SpamDetections: 544, EdgeBlockSpam: 352, EmailPhish: 44, EmailMalware: 4 },
+    { date: '2026-08-13', GoodMail: 3766, TransportRules: 109, SpamDetections: 511, EdgeBlockSpam: 329, EmailPhish: 36, EmailMalware: 2 },
+    { date: '2026-08-14', GoodMail: 3841, TransportRules: 114, SpamDetections: 498, EdgeBlockSpam: 321, EmailPhish: 34, EmailMalware: 3 },
+    { date: '2026-08-15', GoodMail: 3612, TransportRules: 102, SpamDetections: 470, EdgeBlockSpam: 303, EmailPhish: 30, EmailMalware: 4 },
+    { date: '2026-08-16', GoodMail: 1214, TransportRules: 22, SpamDetections: 264, EdgeBlockSpam: 172, EmailPhish: 20, EmailMalware: 3 },
+    { date: '2026-08-17', GoodMail: 1127, TransportRules: 18, SpamDetections: 258, EdgeBlockSpam: 322, EmailPhish: 19, EmailMalware: 2 },
+  ],
+  topSenders: [
+    { Name: 'notifications@sample-crm.example.com', Count: 4820 },
+    { Name: 'billing@example.com', Count: 3115 },
+    { Name: 'scanner-3f@example.com', Count: 2064 },
+    { Name: 'sample.user@example.com', Count: 1893 },
+    { Name: 'helpdesk@example.com', Count: 1477 },
+  ],
+  topSpamRecipients: [
+    { Name: 'info@example.com', Count: 1840 },
+    { Name: 'sales@example.com', Count: 1226 },
+    { Name: 'sample.user@example.com', Count: 744 },
+    { Name: 'accounts@example.com', Count: 517 },
+    { Name: 'careers@example.com', Count: 388 },
+  ],
+}
+
+/**
  * Which sample set feeds which report, keyed by the ids in REPORT_COVER_PRESETS so the preview's
  * report picker and its data stay in step.
  */
@@ -454,4 +699,5 @@ export const SAMPLE_DATA_BY_REPORT = {
   bec: SAMPLE_BEC,
   sharing: { sharingData: SAMPLE_SHARING },
   permissions: { permissionsData: SAMPLE_PERMISSIONS },
+  mailFlow: { mailFlowData: SAMPLE_MAIL_FLOW },
 }

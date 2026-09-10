@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { CippIcons } from '../../utils/icon-registry'
 import {
   Box,
   Button,
@@ -11,8 +12,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material'
-import { Close, Download, PictureAsPdf } from '@mui/icons-material'
-import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer'
+import { PDFDownloadLink } from '@react-pdf/renderer'
+import { CippPdfPreview } from './CippPdfPreview'
 import {
   AlertBox,
   Bold,
@@ -226,7 +227,7 @@ export const PermissionsReportDocument = ({
               />
             </>
           ) : (
-            <ClearBox title="✓ No tenant-wide grants found">
+            <ClearBox title="✔️ No tenant-wide grants found">
               No site or library grants access to Everyone, Everyone except external users, or All
               Users.
             </ClearBox>
@@ -261,7 +262,7 @@ export const PermissionsReportDocument = ({
               />
             </>
           ) : (
-            <ClearBox title="✓ No external grants found">
+            <ClearBox title="✔️ No external grants found">
               No guest or external identity holds a permission on a scanned site or library.
             </ClearBox>
           )}
@@ -301,7 +302,7 @@ export const PermissionsReportDocument = ({
               />
             </>
           ) : (
-            <ClearBox title="✓ Full Control is held through Owners groups">
+            <ClearBox title="✔️ Full Control is held through Owners groups">
               No user or directory group holds Full Control outside a site's Owners group.
             </ClearBox>
           )}
@@ -321,7 +322,7 @@ export const PermissionsReportDocument = ({
               whether each detachment was intentional and is still needed.
             </Paragraph>
           ) : (
-            <ClearBox title="✓ All libraries inherit from their site">
+            <ClearBox title="✔️ All libraries inherit from their site">
               Every scanned library takes its permissions from its site, so site-level access
               management covers them all.
             </ClearBox>
@@ -448,7 +449,7 @@ export const PermissionsReportButton = ({ permissionsData, tenantName }) => {
           <Button
             size="small"
             variant="outlined"
-            startIcon={<PictureAsPdf />}
+            startIcon={<CippIcons.PictureAsPdf />}
             onClick={handleOpen}
             disabled={!hasData}
           >
@@ -462,23 +463,35 @@ export const PermissionsReportButton = ({ permissionsData, tenantName }) => {
         onClose={() => setDialogOpen(false)}
         maxWidth="lg"
         fullWidth
-        PaperProps={{ sx: { height: '90vh' } }}
+        slotProps={{
+          paper: { sx: { height: '90vh' } }
+        }}
       >
         <DialogTitle>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}>
             <Typography variant="h6" component="div">
               Permissions Report Preview
             </Typography>
             <IconButton onClick={() => setDialogOpen(false)} size="small">
-              <Close />
+              <CippIcons.Close />
             </IconButton>
           </Box>
         </DialogTitle>
         <DialogContent dividers sx={{ p: 0 }}>
           {dialogOpen && (
-            <PDFViewer width="100%" height="100%">
+            <CippPdfPreview
+              width="100%"
+              height="100%"
+              title={`Permissions Report - ${tenantName}`}
+              fileName={`Permissions_Report_${tenantName}.pdf`}
+            >
               {documentNode}
-            </PDFViewer>
+            </CippPdfPreview>
           )}
         </DialogContent>
         <DialogActions>
@@ -491,7 +504,7 @@ export const PermissionsReportButton = ({ permissionsData, tenantName }) => {
             {({ loading }) => (
               <Button
                 variant="contained"
-                startIcon={loading ? <CircularProgress size={20} /> : <Download />}
+                startIcon={loading ? <CircularProgress size={20} /> : <CippIcons.Download />}
                 disabled={loading}
               >
                 {loading ? 'Generating…' : 'Download PDF'}
@@ -501,7 +514,7 @@ export const PermissionsReportButton = ({ permissionsData, tenantName }) => {
         </DialogActions>
       </Dialog>
     </>
-  )
+  );
 }
 
 export default PermissionsReportButton

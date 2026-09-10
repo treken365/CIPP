@@ -1,9 +1,10 @@
 import { Box, Typography } from "@mui/material";
 import { resolveCoverImage } from "../CippPdf/resolveCoverImage";
 import { createReportStyles } from "../CippPdf/reportPdfStyles";
-import { createReportTheme } from "../CippPdf/reportTheme";
+import { applyFooterText, applyWatermarkText, createReportTheme } from "../CippPdf/reportTheme";
 import {
   SAMPLE_BEC,
+  SAMPLE_MAIL_FLOW,
   SAMPLE_PERMISSIONS,
   SAMPLE_SHARING,
   SAMPLE_TENANT_NAME,
@@ -21,6 +22,8 @@ const SAMPLE_ANALYSIS_DATE = new Date(SAMPLE_BEC.becData.ExtractedAt).toLocaleSt
   minute: "2-digit",
 });
 
+const SAMPLE_MAIL_FLOW_TOTAL = Object.values(SAMPLE_MAIL_FLOW.totals).reduce((a, b) => a + b, 0);
+
 /**
  * Every report CIPP can produce, in the order they are offered everywhere: the built-in reports
  * first, and the report builder — which renders whatever an operator assembles — last.
@@ -37,6 +40,8 @@ export const REPORT_COVER_PRESETS = [
   {
     id: "executive",
     label: "Executive Report",
+    // Must match `reportName` on ExecutiveReportDocument — cover-mock `%reportname%` uses this.
+    reportName: "Executive Summary",
     coverLabel: "Security Assessment",
     title: "Executive",
     accent: "Summary",
@@ -48,6 +53,7 @@ export const REPORT_COVER_PRESETS = [
   {
     id: "shadowAI",
     label: "Shadow AI Report",
+    reportName: "Shadow AI Report",
     coverLabel: "AI Risk Assessment",
     title: "Shadow AI",
     accent: "Report",
@@ -60,6 +66,7 @@ export const REPORT_COVER_PRESETS = [
   {
     id: "bec",
     label: "BEC Remediation",
+    reportName: "BEC Analysis Report",
     coverLabel: "Security Incident Report",
     title: "BEC Compromise",
     accent: "Analysis",
@@ -74,6 +81,7 @@ export const REPORT_COVER_PRESETS = [
   {
     id: "sharing",
     label: "Sharing Report",
+    reportName: "Sharing Report",
     coverLabel: "Data Sharing Review",
     title: "Sharing",
     accent: "Report",
@@ -88,6 +96,7 @@ export const REPORT_COVER_PRESETS = [
   {
     id: "permissions",
     label: "Permissions Report",
+    reportName: "Permissions Report",
     coverLabel: "Access Review",
     title: "Permissions",
     accent: "Report",
@@ -98,10 +107,27 @@ export const REPORT_COVER_PRESETS = [
     footer: "Confidential — For Internal Use Only",
   },
   {
+    id: "mailFlow",
+    label: "Mail Flow Report",
+    reportName: "Mail Flow Report",
+    coverLabel: "Email Traffic Review",
+    title: "Mail Flow",
+    accent: "Report",
+    subtitle:
+      "Where email came from, how much of it was delivered, and what was stopped before it reached a mailbox.",
+    metaPrimary: SAMPLE_TENANT_NAME,
+    metaSecondary: `${SAMPLE_MAIL_FLOW_TOTAL.toLocaleString()} messages · ${SAMPLE_MAIL_FLOW.days} days · ${(
+      SAMPLE_MAIL_FLOW.totals.EmailPhish + SAMPLE_MAIL_FLOW.totals.EmailMalware
+    ).toLocaleString()} threats caught`,
+    footer: "Confidential — For Internal Use Only",
+  },
+  {
     // Last: this one has no fixed content of its own — it renders whatever an operator assembles in
     // the report builder, so it belongs after the reports that are the same every time.
     id: "reportBuilder",
     label: "Report Builder",
+    // Matches the sample template name used by CippBrandingReportPreview for this report type.
+    reportName: "Quarterly Security Review",
     coverLabel: "Assessment Report",
     title: "Custom",
     accent: "Report",
@@ -152,6 +178,18 @@ const CippBrandingCoverPreview = ({
     month: "long",
     day: "numeric",
   });
+  // Same substitution + length ceiling the PDF applies — without it, typing %tenantname% in
+  // branding shows the token literally in this mock while real reports resolve it.
+  const previewVariables = {
+    tenantname: SAMPLE_TENANT_NAME,
+    reportname: preset.reportName,
+    reportdate: currentDate,
+  };
+  const watermarkLabel = applyWatermarkText(theme.watermark.text, previewVariables);
+  const coverFooterLabel = applyFooterText(
+    theme.coverFooterText || preset.footer,
+    previewVariables
+  );
 
   return (
     <Box
@@ -251,7 +289,7 @@ const CippBrandingCoverPreview = ({
               whiteSpace: "nowrap",
             }}
           >
-            {theme.watermark.text}
+            {watermarkLabel}
           </Box>
         </Box>
       )}
@@ -339,7 +377,7 @@ const CippBrandingCoverPreview = ({
           }}
         >
           {/* A configured cover note replaces the report's own wording, exactly as the PDF does. */}
-          {theme.coverFooterText || preset.footer}
+          {coverFooterLabel}
         </Typography>
       </Box>
     </Box>
